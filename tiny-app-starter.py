@@ -1,27 +1,46 @@
-from tkinter import Tk, Button, Frame
-from tkinter import RAISED
+from tkinter import Tk, Button, Frame, DISABLED, NORMAL, RAISED
 from tkinter import messagebox
-from subprocess import check_call, CalledProcessError
+from subprocess import check_call, CalledProcessError, PIPE, Popen
 from sys import argv
+from threading import Thread
 
 
 def start_app():
     try:
-        if len(argv) > 1:
-            check_call([argv[1]])
+        if len(argv) == 2:
+            new_proc([argv[1]])
         else:
             from config import APPLICATION
-            check_call(APPLICATION)
+            if APPLICATION:
+                new_proc(APPLICATION)
+            else:
+                messagebox.showerror('Ошибка', '''Не задано приложение для запуска.''')
     except CalledProcessError as err:
         messagebox.showerror('Error', 'Error: '+str(err))
     finally:
         pass
 
 
+def start_thread(fn):
+    def wrapper(app):
+        c = Thread(target=fn, args=(app,))
+        c.start()
+    return wrapper
+
+
+@start_thread
+def new_proc(app):
+    with Popen([app], stdout=PIPE) as proc:
+        start_btn.configure(state=DISABLED)
+        while True:
+            if proc.poll() is not None:
+                start_btn.configure(state=NORMAL)
+                break
+
+
 def logoff():
     try:
-    #   check_call(['shutdown', '/l', '/f'])
-        check_call(['calc'])
+       check_call(['shutdown', '/l', '/f'])
     except CalledProcessError as err:
         messagebox.showerror('Error', 'Error: '+str(err))
 
