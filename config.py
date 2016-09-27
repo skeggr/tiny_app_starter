@@ -1,1 +1,1 @@
-APPLICATION = 'calc.exe'
+APPLICATION = ''
